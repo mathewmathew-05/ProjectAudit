@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ProjectAudit - Academic Project Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#374151',
+            'primary-light': '#6b7280',
+            accent: '#2563eb',
+            'status-pending': '#fbbf24',
+            'status-approved': '#34d399',
+            'status-rejected': '#f87171',
+            'similarity-high': '#ef4444',
+            'similarity-medium': '#f97316',
+            'similarity-low': '#22c55e'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .minimal-bg { background: linear-gradient(135deg,#f8fafc 0%, #e2e8f0 100%); }
+    .card-shadow { box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04); }
+  .line-clamp-3 { display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient: vertical; overflow:hidden; line-clamp:3; }
+    .modal-fade { transition: opacity .15s ease; }
+    .custom-modal-backdrop { background: rgba(0,0,0,0.45); transition: opacity .15s; }
+    .similarity-bar {
+      background: linear-gradient(90deg, #22c55e 0%, #f97316 50%, #ef4444 100%);
+      border-radius: 4px;
+      height: 8px;
+    }
+    .similarity-indicator {
+      position: relative;
+      width: 100%;
+      height: 8px;
+      background: #e5e7eb;
+      border-radius: 4px;
+    }
+    .pulse-alert { animation: pulse 2s infinite; }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+  <!-- LOGIN -->
+  <div id="loginPage" class="min-h-screen minimal-bg flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg card-shadow p-8 w-full max-w-md">
+      <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-primary mb-2">ProjectAudit</h1>
+        <p class="text-primary-light">Academic Project Submission Portal</p>
+      </div>
+      <form id="loginForm" class="space-y-6" onsubmit="event.preventDefault(); handleLogin();">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Login As</label>
+          <select id="userRole" class="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-accent bg-white">
+            <option value="student">Student</option>
+            <option value="faculty">Faculty</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+          <input id="loginEmail" type="email" class="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-accent" placeholder="Enter your email" required>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+          <input id="loginPassword" type="password" class="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-accent" placeholder="Enter your password" required>
+        </div>
+        <button type="submit" class="w-full bg-primary text-white py-3 rounded-md font-medium hover:bg-gray-700">Sign In</button>
+        <div class="text-center">
+          <p class="text-sm text-gray-700 mb-2">Don't have an account? <a href="#" onclick="showRegisterPage()" class="text-accent hover:underline">Register</a></p>
+          <a href="#" class="text-sm text-accent hover:underline">Forgot your password?</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- REGISTER -->
+  <div id="registerPage" class="hidden min-h-screen flex items-center justify-center p-6" style="background: linear-gradient(180deg,#f0f6ff 0%, #f8fafc 100%);">
+    <div class="w-full max-w-2xl">
+      <div class="text-center mb-6">
+        <h1 class="text-4xl font-bold text-primary">ProjectAudit</h1>
+        <p class="text-primary-light mt-2">Academic Project Submission Platform</p>
+      </div>
+      <div class="bg-white rounded-2xl card-shadow p-8">
+        <div class="max-w-lg mx-auto">
+          <h2 class="text-2xl font-semibold text-gray-900 mb-1 text-center">Create Account</h2>
+          <p class="text-center text-sm text-primary-light mb-6">Sign up to start submitting your project ideas</p>
+          <form id="registerForm" onsubmit="event.preventDefault(); handleRegister();" class="space-y-4">
+            <div>
+              <label class="flex items-center text-sm font-medium text-gray-700 mb-2">Register as</label>
+              <select id="regRole" class="w-full border border-gray-200 rounded-md px-4 py-3 focus:ring-2 focus:ring-accent bg-white">
+                <option value="student">Student</option>
+                <option value="faculty">Faculty</option>
+              </select>
+            </div>
+            <div>
+              <label class="flex items-center text-sm font-medium text-gray-700 mb-2">Full Name</label>
+              <input id="regName" type="text" placeholder="Enter your full name" class="w-full border border-gray-200 rounded-md px-4 py-3 focus:ring-2 focus:ring-accent" required>
+            </div>
+            <div>
+              <label class="flex items-center text-sm font-medium text-gray-700 mb-2">Email</label>
+              <input id="regEmail" type="email" placeholder="Enter your email" class="w-full border border-gray-200 rounded-md px-4 py-3 focus:ring-2 focus:ring-accent" required>
+            </div>
+            <div>
+              <label class="flex items-center text-sm font-medium text-gray-700 mb-2">Password</label>
+              <input id="regPassword" type="password" placeholder="Create a password" class="w-full border border-gray-200 rounded-md px-4 py-3 focus:ring-2 focus:ring-accent" required>
+            </div>
+            <div>
+              <label class="flex items-center text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
+              <input id="regConfirmPassword" type="password" placeholder="Confirm your password" class="w-full border border-gray-200 rounded-md px-4 py-3 focus:ring-2 focus:ring-accent" required>
+            </div>
+            <div class="pt-2">
+              <button type="submit" class="w-full bg-accent text-white py-3 rounded-lg font-medium hover:opacity-95">Create Account</button>
+            </div>
+            <div class="text-center mt-4">
+              <p class="text-sm text-primary-light">Already have an account? <a href="#" class="text-accent font-medium" onclick="showLoginPage()">Login</a></p>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STUDENT DASHBOARD -->
+  <div id="studentDashboard" class="hidden min-h-screen bg-gray-50">
+    <header class="bg-white border-b border-gray-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
+        <div class="flex items-center space-x-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          <h1 class="text-xl font-semibold text-primary">ProjectAudit</h1>
+        </div>
+        <div class="flex items-center space-x-6">
+          <button onclick="showSubmitProjectModal()" class="inline-flex items-center space-x-2 bg-blue-600 text-white px-5 py-2 rounded-md shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            <span>Submit New Project</span>
+          </button>
+          <span class="text-gray-700 text-sm">Welcome, <strong id="studentNameDisplay"></strong></span>
+          <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-1 rounded-full">Student</span>
+          <button onclick="logout()" class="text-gray-600 hover:text-gray-900">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="mb-10">
+        <h2 class="text-3xl font-bold text-gray-900 mb-1">Student Dashboard</h2>
+        <p class="text-gray-700 text-base">Welcome back, <span id="studentNameGreeting"></span>! Manage your project submissions here.</p>
+      </div>
+
+      <section class="bg-white rounded-lg shadow p-6">
+        <h3 class="mb-1 text-lg font-semibold text-gray-900">Your Project Submissions</h3>
+  <p class="mb-6 text-gray-500">Track the status of your submitted project ideas</p>
+
+        <div class="overflow-x-auto">
+          <table class="w-full border-none text-gray-800 text-sm">
+            <thead>
+              <tr class="bg-gray-100 text-left text-gray-600 font-semibold text-sm">
+                <th class="px-5 py-4 max-w-xs">Title</th>
+                <th class="px-5 py-4">Domain</th>
+                <th class="px-5 py-4">Status</th>
+                <th class="px-5 py-4">Submitted</th>
+                <th class="px-5 py-4">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="studentProjectsTableBody" class="divide-y divide-gray-200">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ENHANCED FACULTY DASHBOARD -->
+  <div id="facultyDashboard" class="hidden min-h-screen bg-gray-50">
+    <header class="bg-white border-b border-gray-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
+        <div class="flex items-center space-x-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          <h1 class="text-xl font-semibold text-primary">ProjectAudit</h1>
+        </div>
+        <div class="flex items-center space-x-6">
+          <button onclick="showSimilarityAnalysis()" class="flex items-center space-x-2 text-amber-600 font-semibold border border-amber-600 px-3 py-1 rounded hover:bg-amber-50">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            <span>Similarity Report</span>
+          </button>
+          <button class="flex items-center space-x-2 text-blue-600 font-semibold border border-blue-600 px-3 py-1 rounded hover:bg-blue-50">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M2 5a2 2 0 012-2h12a2 2 0 012 2v9a2 2 0 01-2 2H9l-4 4v-4H4a2 2 0 01-2-2V5z" />
+            </svg>
+            <span>Dashboard</span>
+          </button>
+          <span class="text-gray-700 text-sm">Welcome, <strong id="facultyNameDisplay"></strong></span>
+          <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-1 rounded-full">Faculty</span>
+          <button onclick="logout()" class="text-gray-600 hover:text-gray-900">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <p class="mb-6 text-gray-700 text-base">Welcome back, <span id="facultyNameGreeting"></span>! Review and manage project submissions with AI-powered similarity detection.</p>
+
+      <!-- ENHANCED STATS WITH SIMILARITY -->
+      <div class="grid grid-cols-1 md:grid-cols-6 gap-6 mb-8">
+        <section class="bg-white rounded-lg p-6 card-shadow flex items-center space-x-4">
+          <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm text-gray-700">Total Projects</p>
+            <p id="statTotalProjects" class="text-2xl font-bold text-gray-900">0</p>
+          </div>
+        </section>
+        <section class="bg-white rounded-lg p-6 card-shadow flex items-center space-x-4">
+          <div class="w-10 h-10 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="6" />
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm text-gray-700">Pending Review</p>
+            <p id="statPendingProjects" class="text-2xl font-bold text-yellow-600">0</p>
+          </div>
+        </section>
+        <section class="bg-white rounded-lg p-6 card-shadow flex items-center space-x-4">
+          <div class="w-10 h-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm text-gray-700">Approved</p>
+            <p id="statApprovedProjects" class="text-2xl font-bold text-green-600">0</p>
+          </div>
+        </section>
+        <section class="bg-white rounded-lg p-6 card-shadow flex items-center space-x-4">
+          <div class="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm text-gray-700">Rejected</p>
+            <p id="statRejectedProjects" class="text-2xl font-bold text-red-600">0</p>
+          </div>
+        </section>
+        <section class="bg-white rounded-lg p-6 card-shadow flex items-center space-x-4">
+          <div class="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center pulse-alert">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm text-gray-700">Potential Duplicates</p>
+            <p id="statDuplicates" class="text-2xl font-bold text-orange-600">0</p>
+          </div>
+        </section>
+        <section class="bg-white rounded-lg p-6 card-shadow flex items-center space-x-4">
+          <div class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm text-gray-700">Avg Similarity</p>
+            <p id="statAvgSimilarity" class="text-2xl font-bold text-purple-600">0%</p>
+          </div>
+        </section>
+      </div>
+
+      <section class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-3">Project Submissions with AI Similarity Analysis</h3>
+        <p class="text-sm text-primary-light mb-4">Review projects with advanced semantic similarity detection to identify potential duplicates and similar content.</p>
+
+        <div class="flex flex-col lg:flex-row lg:items-center lg:space-x-4 gap-3 mb-6">
+          <div class="flex-1 relative">
+            <input id="facultySearchInput" type="text" placeholder="Search by title, student name, or domain..."
+              class="w-full border border-gray-300 rounded-md px-4 py-3 pl-10 focus:ring-2 focus:ring-accent focus:outline-none" />
+            <div class="pointer-events-none absolute top-3 left-3 text-gray-400">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="7" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+            </div>
+          </div>
+          <div class="flex space-x-2">
+            <select id="facultyStatusFilter" class="border border-gray-300 rounded-md px-4 py-3">
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+            </select>
+            <select id="facultyDomainFilter" class="border border-gray-300 rounded-md px-4 py-3">
+              <option value="">All Domains</option>
+              <option value="computer_science">Computer Science</option>
+              <option value="data_science">Data Science</option>
+              <option value="web_development">Web Development</option>
+              <option value="mobile_development">Mobile Development</option>
+              <option value="ai_ml">AI/Machine Learning</option>
+            </select>
+            <select id="facultySimilarityFilter" class="border border-gray-300 rounded-md px-4 py-3">
+              <option value="">All Similarity</option>
+              <option value="duplicate">Potential Duplicates (≥92%)</option>
+              <option value="high">High Similarity (≥78%)</option>
+            </select>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full border-none">
+            <thead>
+              <tr class="text-left text-sm text-gray-600 border-none">
+                <th class="py-3 px-4">Student</th>
+                <th class="py-3 px-4">Project</th>
+                <th class="py-3 px-4">Domain</th>
+                <th class="py-3 px-4">Similarity Analysis</th>
+                <th class="py-3 px-4">Status</th>
+                <th class="py-3 px-4">Submitted</th>
+                <th class="py-3 px-4">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="facultyProjectsTableBody" class="text-sm text-gray-800">
+              <!-- dynamically rendered rows -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- SIMILARITY ANALYSIS MODAL -->
+  <div id="similarityAnalysisModal" class="hidden fixed inset-0 z-50 flex items-center justify-center custom-modal-backdrop">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full p-8 relative max-h-[90vh] overflow-y-auto">
+      <button onclick="closeSimilarityAnalysis()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 focus:outline-none">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+      <div>
+        <h3 class="text-2xl font-semibold text-gray-900 mb-2">AI Similarity Analysis Report</h3>
+        <p class="text-base text-primary-light mb-6">Comprehensive analysis of project similarities using advanced semantic AI</p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="bg-red-50 rounded-lg p-4 text-center">
+          <div class="text-2xl font-bold text-red-600" id="duplicateCount">0</div>
+          <div class="text-sm text-red-700">Potential Duplicates</div>
+          <div class="text-xs text-gray-500">≥92% similarity</div>
+        </div>
+        <div class="bg-orange-50 rounded-lg p-4 text-center">
+          <div class="text-2xl font-bold text-orange-600" id="highSimilarityCount">0</div>
+          <div class="text-sm text-orange-700">High Similarity</div>
+          <div class="text-xs text-gray-500">78-92% similarity</div>
+        </div>
+        <div class="bg-blue-50 rounded-lg p-4 text-center">
+          <div class="text-2xl font-bold text-blue-600" id="analysisTimestamp">--</div>
+          <div class="text-sm text-blue-700">Last Analysis</div>
+          <div class="text-xs text-gray-500">Real-time detection</div>
+        </div>
+      </div>
+
+      <div class="space-y-6">
+        <div>
+          <h4 class="text-lg font-semibold text-red-600 mb-3">🚨 Potential Duplicates</h4>
+          <div id="duplicatePairs" class="space-y-3">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+        
+        <div>
+          <h4 class="text-lg font-semibold text-orange-600 mb-3">⚠️ High Similarity Projects</h4>
+          <div id="similarityPairs" class="space-y-3">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUBMIT PROJECT MODAL -->
+  <div id="submitProjectModal" class="hidden fixed inset-0 z-50 flex items-center justify-center custom-modal-backdrop">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8 relative">
+      <button onclick="closeSubmitProjectModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 focus:outline-none">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+      <div>
+        <h3 class="text-2xl font-semibold text-gray-900 mb-1">Submit New Project</h3>
+        <p class="text-base text-primary-light mb-4">Share your innovative project idea with AI-powered similarity checking!</p>
+      </div>
+      <form id="projectSubmissionForm" onsubmit="event.preventDefault(); submitProject();" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Project Title</label>
+          <input id="projTitle" type="text" class="w-full border border-gray-300 rounded-md px-4 py-3 focus:ring-2 focus:ring-accent" placeholder="e.g., AI-powered Chatbot" required>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Project Domain</label>
+          <select id="projDomain" class="w-full border border-gray-300 rounded-md px-4 py-3 focus:ring-2 focus:ring-accent bg-white" required>
+            <option value="">Select Domain</option>
+            <option value="computer_science">Computer Science</option>
+            <option value="data_science">Data Science</option>
+            <option value="web_development">Web Development</option>
+            <option value="mobile_development">Mobile Development</option>
+            <option value="ai_ml">AI/Machine Learning</option>
+            <option value="blockchain">Blockchain</option>
+            <option value="cybersecurity">Cybersecurity</option>
+            <option value="iot">Internet of Things</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Assigned Faculty</label>
+          <select id="projFaculty" class="w-full border border-gray-300 rounded-md px-4 py-3 focus:ring-2 focus:ring-accent bg-white" required>
+            <option value="">Select Faculty</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Project Description</label>
+          <textarea id="projDescription" rows="4" class="w-full border border-gray-300 rounded-md px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-accent"
+            placeholder="Describe your project, its goals, and key features..." required></textarea>
+        </div>
+        <div class="flex justify-end gap-3 pt-2">
+          <button type="button" onclick="closeSubmitProjectModal()" class="bg-gray-100 hover:bg-gray-200 rounded-lg px-4 py-2 font-medium">Cancel</button>
+          <button type="submit" class="bg-accent hover:opacity-95 rounded-lg px-4 py-2 font-medium text-white">Submit Project</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ENHANCED SIMILARITY WARNING MODAL -->
+  <div id="similarityWarningModal" class="hidden fixed inset-0 z-50 flex items-center justify-center custom-modal-backdrop">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8 relative">
+      <button onclick="closeSimilarityWarningModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 focus:outline-none">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+      <div class="flex items-start space-x-4 mb-4">
+        <div class="flex-shrink-0">
+          <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+        </div>
+        <div class="flex-1">
+          <h3 class="text-2xl font-semibold text-gray-900 mb-2">AI Similarity Alert</h3>
+          <p id="similarityWarningMessage" class="mb-4 text-gray-700 font-medium"></p>
+          <div id="similarityWarningDetails" class="mb-4 p-3 bg-gray-50 rounded-lg">
+            <p class="text-sm text-gray-600"></p>
+          </div>
+          <div id="similarProjectsList" class="space-y-2 mb-6">
+            <!-- Similar projects list -->
+          </div>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 pt-2">
+        <button onclick="closeSimilarityWarningModal()" class="bg-gray-100 hover:bg-gray-200 rounded-lg px-4 py-2 font-medium">Review & Modify</button>
+        <button onclick="acknowledgeSimilarityWarning()" class="bg-red-600 hover:bg-red-700 rounded-lg px-4 py-2 font-medium text-white">Proceed Anyway</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- OTHER EXISTING MODALS (Faculty Rejection, View Project, etc.) -->
+  <div id="rejectModal" class="hidden fixed inset-0 z-50 flex items-center justify-center custom-modal-backdrop">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8 relative">
+      <button onclick="closeRejectModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 focus:outline-none">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+      <div>
+        <h3 class="text-2xl font-semibold text-gray-900 mb-1">Reject Project</h3>
+        <p class="text-base text-primary-light mb-4">Provide feedback to help the student improve their project idea.</p>
+      </div>
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Project Title</label>
+        <p id="rejectModalTitle" class="font-medium text-gray-900"></p>
+      </div>
+      <div class="mb-6">
+        <div class="flex items-center mb-1">
+          <input type="checkbox" id="rejectModalFeedbackChk" class="peer h-5 w-5 rounded border-gray-300 checked:bg-blue-600 checked:border-blue-600 transition-all" checked>
+          <label for="rejectModalFeedbackChk" class="ml-2 text-sm font-medium text-gray-700">Feedback (Optional)</label>
+        </div>
+        <textarea id="rejectModalFeedback" rows="3" class="w-full border border-gray-300 rounded-lg p-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-accent"
+          placeholder="Provide constructive feedback to help the student improve..."></textarea>
+      </div>
+      <div class="flex justify-end gap-3">
+        <button onclick="closeRejectModal()" class="bg-gray-100 hover:bg-gray-200 rounded-lg px-4 py-2 font-medium">Cancel</button>
+        <button onclick="confirmReject()" class="bg-red-600 hover:bg-red-700 rounded-lg px-4 py-2 font-medium text-white">Reject Project</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="viewProjectModal" class="hidden fixed inset-0 z-50 flex items-center justify-center custom-modal-backdrop">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8 relative max-h-[90vh] overflow-y-auto">
+      <button onclick="closeViewProjectModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 focus:outline-none">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+      <div>
+        <h3 class="text-2xl font-semibold text-gray-900 mb-1" id="viewModalHeader">Project Details</h3>
+        <p class="text-base text-primary-light mb-4">View or edit this project submission.</p>
+      </div>
+      <form id="viewProjectForm" onsubmit="event.preventDefault(); saveEditedProject();" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Project Title</label>
+          <input id="viewProjTitle" type="text" class="w-full border border-gray-300 rounded-md px-4 py-3 focus:ring-2 focus:ring-accent" required>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Project Domain</label>
+          <input id="viewProjDomain" type="text" class="w-full border border-gray-300 rounded-md px-4 py-3 bg-gray-50 text-gray-600" readonly>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Assigned Faculty</label>
+          <input id="viewProjFaculty" type="text" class="w-full border border-gray-300 rounded-md px-4 py-3 bg-gray-50 text-gray-600" readonly>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Submitted By</label>
+          <input id="viewProjStudent" type="text" class="w-full border border-gray-300 rounded-md px-4 py-3 bg-gray-50 text-gray-600" readonly>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Project Description</label>
+          <textarea id="viewProjDescription" rows="4" class="w-full border border-gray-300 rounded-md px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-accent" required></textarea>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+          <p id="viewProjStatus" class="font-medium text-gray-900"></p>
+        </div>
+        <div id="viewProjFeedbackContainer" class="mb-4 hidden">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Faculty Feedback</label>
+          <p id="viewProjFeedback" class="text-red-600 italic"></p>
+        </div>
+        <div class="flex justify-end gap-3 pt-2">
+          <button type="button" onclick="closeViewProjectModal()" class="bg-gray-100 hover:bg-gray-200 rounded-lg px-4 py-2 font-medium">Close</button>
+          <button type="submit" id="viewProjectSaveBtn" class="bg-accent hover:opacity-95 rounded-lg px-4 py-2 font-medium text-white hidden">Save & Resubmit</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="bg-white border-t mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <p class="text-center text-primary-light text-sm">© 2025 ProjectAudit – Academic Project Submission Portal with AI Similarity Detection</p>
+    </div>
+  </footer>
+
+  <!-- ENHANCED JAVASCRIPT WITH SIMILARITY FEATURES -->
+  <script>
+    // Global state
+    let currentUser = {
+      email: null,
+      name: null,
+      role: null
+    };
+
+    // Helper maps for display
+    const domainClassMap = {
+      computer_science: 'bg-indigo-100 text-indigo-700',
+      data_science: 'bg-teal-100 text-teal-700',
+      web_development: 'bg-blue-100 text-blue-700',
+      mobile_development: 'bg-purple-100 text-purple-700',
+      ai_ml: 'bg-pink-100 text-pink-700',
+      blockchain: 'bg-gray-100 text-gray-700',
+      cybersecurity: 'bg-amber-100 text-amber-700',
+      iot: 'bg-lime-100 text-lime-700',
+    };
+
+    const statusClassMap = {
+      pending: 'bg-yellow-100 text-yellow-700',
+      approved: 'bg-green-100 text-green-700',
+      rejected: 'bg-red-100 text-red-700'
+    };
+
+    // Similarity flag colors and text
+    const similarityFlagMap = {
+      'DUPLICATE': { color: 'text-red-600', text: 'Potential Duplicate', bgColor: 'bg-red-100' },
+      'HIGH_SIMILARITY': { color: 'text-orange-600', text: 'High Similarity', bgColor: 'bg-orange-100' },
+      'MEDIUM_SIMILARITY': { color: 'text-yellow-600', text: 'Medium Similarity', bgColor: 'bg-yellow-100' },
+      'UNIQUE': { color: 'text-green-600', text: 'Unique Project', bgColor: 'bg-green-100' }
+    };
+
+    // Helper function to get similarity color based on percentage
+    function getSimilarityColor(percentage) {
+      if (percentage >= 92) return 'bg-red-500';
+      if (percentage >= 78) return 'bg-orange-500';
+      if (percentage >= 65) return 'bg-yellow-500';
+      return 'bg-green-500';
+    }
+
+    // Helper function to create similarity bar
+    function createSimilarityBar(percentage, flag) {
+      const colorClass = getSimilarityColor(percentage);
+      const flagInfo = similarityFlagMap[flag] || similarityFlagMap['UNIQUE'];
+      
+      return `
+        <div class="flex items-center space-x-2">
+          <div class="similarity-indicator flex-1">
+            <div class="h-2 rounded-full ${colorClass}" style="width: ${Math.min(percentage, 100)}%;"></div>
+          </div>
+          <span class="text-sm font-semibold ${flagInfo.color}">${percentage}%</span>
+        </div>
+        <div class="text-xs ${flagInfo.color} mt-1">${flagInfo.text}</div>
+      `;
+    }
+
+    // --- Authentication Functions ---
+    async function handleRegister() {
+      const name = document.getElementById('regName').value.trim();
+      const email = document.getElementById('regEmail').value.trim();
+      const password = document.getElementById('regPassword').value;
+      const confirmPassword = document.getElementById('regConfirmPassword').value;
+      const role = document.getElementById('regRole').value;
+
+      if(!name || !email || !password || !confirmPassword || !role) {
+        alert('All fields are required.');
+        return;
+      }
+      if (password !== confirmPassword) {
+        alert('Passwords do not match.');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/register', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({name, email, password, role})
+        });
+        const data = await response.json();
+        if(data.success) {
+          alert('Registration successful! Please login.');
+          showLoginPage();
+          document.getElementById('registerForm').reset();
+        } else {
+          alert(data.message || 'Registration failed.');
+        }
+      } catch (error) {
+        console.error('Register error:', error);
+        alert('Registration request failed.');
+      }
+    }
+
+    async function handleLogin() {
+      const role = document.getElementById('userRole').value;
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+
+      if (!email || !password) {
+        alert('Please fill in all fields.');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, role })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          currentUser.email = data.email;
+          currentUser.name = data.name;
+          currentUser.role = data.role;
+
+          document.getElementById('loginForm').reset();
+
+          if (role === 'faculty') {
+            showFacultyDashboard();
+            document.getElementById('facultyNameDisplay').textContent = currentUser.name;
+            document.getElementById('facultyNameGreeting').textContent = currentUser.name;
+            renderFacultyProjects();
+            renderFacultyStats();
+          } else {
+            showStudentDashboard();
+            document.getElementById('studentNameDisplay').textContent = currentUser.name;
+            document.getElementById('studentNameGreeting').textContent = currentUser.name;
+            populateFacultyDropdown();
+            renderStudentProjects();
+          }
+        } else {
+          alert(data.message || 'Invalid credentials.');
+        }
+      } catch (error) {
+        console.error('Login error:', error);
+        alert('Login request failed.');
+      }
+    }
+
+    function logout() {
+      currentUser = { email: null, name: null, role: null };
+      showLoginPage();
+      alert('You have been logged out.');
+    }
+
+    // --- Page Navigation Functions ---
+    function showLoginPage() {
+      document.getElementById('loginPage').classList.remove('hidden');
+      document.getElementById('registerPage').classList.add('hidden');
+      document.getElementById('studentDashboard').classList.add('hidden');
+      document.getElementById('facultyDashboard').classList.add('hidden');
+    }
+
+    function showRegisterPage() {
+      document.getElementById('loginPage').classList.add('hidden');
+      document.getElementById('registerPage').classList.remove('hidden');
+      document.getElementById('studentDashboard').classList.add('hidden');
+      document.getElementById('facultyDashboard').classList.add('hidden');
+    }
+
+    function showStudentDashboard() {
+      document.getElementById('loginPage').classList.add('hidden');
+      document.getElementById('registerPage').classList.add('hidden');
+      document.getElementById('facultyDashboard').classList.add('hidden');
+      document.getElementById('studentDashboard').classList.remove('hidden');
+    }
+
+    function showFacultyDashboard() {
+      document.getElementById('loginPage').classList.add('hidden');
+      document.getElementById('registerPage').classList.add('hidden');
+      document.getElementById('studentDashboard').classList.add('hidden');
+      document.getElementById('facultyDashboard').classList.remove('hidden');
+
+      // Attach event listeners for enhanced filters
+      document.getElementById('facultySearchInput').oninput = renderFacultyProjects;
+      document.getElementById('facultyStatusFilter').onchange = renderFacultyProjects;
+      document.getElementById('facultyDomainFilter').onchange = renderFacultyProjects;
+      document.getElementById('facultySimilarityFilter').onchange = renderFacultyProjects;
+    }
+
+    // --- Project Submission Functions ---
+    function showSubmitProjectModal() {
+      document.getElementById('projectSubmissionForm').reset();
+      populateFacultyDropdown();
+      document.getElementById('submitProjectModal').classList.remove('hidden');
+    }
+
+    function closeSubmitProjectModal() {
+      document.getElementById('submitProjectModal').classList.add('hidden');
+    }
+
+    async function submitProject() {
+      const title = document.getElementById('projTitle').value.trim();
+      const domain = document.getElementById('projDomain').value;
+      const assignedFacultyEmail = document.getElementById('projFaculty').value;
+      const description = document.getElementById('projDescription').value.trim();
+
+      if (!title || !domain || !assignedFacultyEmail || !description) {
+        alert("All project fields are required.");
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/projects', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title,
+            domain,
+            description,
+            assignedFacultyEmail,
+            submittedByEmail: currentUser.email,
+            submittedByName: currentUser.name
+          })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          alert("Project submitted successfully!");
+          closeSubmitProjectModal();
+          renderStudentProjects();
+        } else {
+          alert(data.message || "Project submission failed.");
+        }
+      } catch (error) {
+        console.error('Project submit error:', error);
+        alert('Error submitting project.');
+      }
+    }
+
+    // --- Enhanced Similarity Warning Modal ---
+    function openEnhancedSimilarityWarningModal(data) {
+      document.getElementById('similarityWarningMessage').textContent = data.similarity_warning;
+      
+      const detailsContainer = document.getElementById('similarityWarningDetails').firstElementChild;
+      detailsContainer.textContent = `Similarity Score: ${data.project.similarity_percentage}% (${data.project.similarity_flag.replace('_', ' ')})`;
+      
+      // Show similar projects if available
+      const similarProjectsList = document.getElementById('similarProjectsList');
+      if (data.similar_projects && data.similar_projects.length > 0) {
+        similarProjectsList.innerHTML = data.similar_projects.map(proj => `
+          <div class="p-2 bg-red-50 rounded border-l-4 border-red-400">
+            <div class="text-sm font-medium text-red-800">${escapeHtml(proj.title)}</div>
+            <div class="text-xs text-red-600">by ${escapeHtml(proj.student_name)} - ${proj.similarity_score}% similar</div>
+          </div>
+        `).join('');
+      } else {
+        similarProjectsList.innerHTML = '<p class="text-sm text-gray-600">No specific similar projects identified.</p>';
+      }
+      
+      document.getElementById('similarityWarningModal').classList.remove('hidden');
+    }
+
+    function closeSimilarityWarningModal() {
+      document.getElementById('similarityWarningModal').classList.add('hidden');
+    }
+
+    function acknowledgeSimilarityWarning() {
+      closeSimilarityWarningModal();
+      alert("Project submitted with similarity warning acknowledged.");
+      closeSubmitProjectModal();
+      renderStudentProjects();
+    }
+
+    // --- Enhanced Similarity Analysis Modal ---
+    async function showSimilarityAnalysis() {
+      try {
+        const response = await fetch(`/api/similarity_analysis?email=${currentUser.email}`);
+        const data = await response.json();
+        
+        // Update counts
+        document.getElementById('duplicateCount').textContent = data.total_duplicates;
+        document.getElementById('highSimilarityCount').textContent = data.total_high_similarity;
+        
+        // Format timestamp
+        const timestamp = new Date(data.analysis_timestamp).toLocaleString();
+        document.getElementById('analysisTimestamp').textContent = timestamp.split(' ')[1];
+        
+        // Populate duplicate pairs
+        const duplicatePairsContainer = document.getElementById('duplicatePairs');
+        if (data.duplicate_pairs.length === 0) {
+          duplicatePairsContainer.innerHTML = '<p class="text-sm text-gray-500">No potential duplicates detected.</p>';
+        } else {
+          duplicatePairsContainer.innerHTML = data.duplicate_pairs.map(pair => `
+            <div class="p-4 bg-red-50 rounded-lg border border-red-200">
+              <div class="flex justify-between items-start mb-2">
+                <span class="text-lg font-bold text-red-600">${pair.similarity_score.toFixed(1)}% Similar</span>
+                <span class="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full font-semibold">DUPLICATE</span>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-white p-3 rounded border">
+                  <div class="font-medium text-gray-900">${escapeHtml(pair.project1.title)}</div>
+                  <div class="text-sm text-gray-600">by ${escapeHtml(pair.project1.student)}</div>
+                  <div class="text-xs text-gray-500 mt-1">Status: ${capitalize(pair.project1.status)}</div>
+                </div>
+                <div class="bg-white p-3 rounded border">
+                  <div class="font-medium text-gray-900">${escapeHtml(pair.project2.title)}</div>
+                  <div class="text-sm text-gray-600">by ${escapeHtml(pair.project2.student)}</div>
+                  <div class="text-xs text-gray-500 mt-1">Status: ${capitalize(pair.project2.status)}</div>
+                </div>
+              </div>
+            </div>
+          `).join('');
+        }
+        
+        // Populate high similarity pairs
+        const similarityPairsContainer = document.getElementById('similarityPairs');
+        if (data.high_similarity_pairs.length === 0) {
+          similarityPairsContainer.innerHTML = '<p class="text-sm text-gray-500">No high similarity pairs detected.</p>';
+        } else {
+          similarityPairsContainer.innerHTML = data.high_similarity_pairs.map(pair => `
+            <div class="p-4 bg-orange-50 rounded-lg border border-orange-200">
+              <div class="flex justify-between items-start mb-2">
+                <span class="text-lg font-bold text-orange-600">${pair.similarity_score.toFixed(1)}% Similar</span>
+                <span class="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded-full font-semibold">HIGH SIMILARITY</span>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-white p-3 rounded border">
+                  <div class="font-medium text-gray-900">${escapeHtml(pair.project1.title)}</div>
+                  <div class="text-sm text-gray-600">by ${escapeHtml(pair.project1.student)}</div>
+                  <div class="text-xs text-gray-500 mt-1">Status: ${capitalize(pair.project1.status)}</div>
+                </div>
+                <div class="bg-white p-3 rounded border">
+                  <div class="font-medium text-gray-900">${escapeHtml(pair.project2.title)}</div>
+                  <div class="text-sm text-gray-600">by ${escapeHtml(pair.project2.student)}</div>
+                  <div class="text-xs text-gray-500 mt-1">Status: ${capitalize(pair.project2.status)}</div>
+                </div>
+              </div>
+            </div>
+          `).join('');
+        }
+        
+        document.getElementById('similarityAnalysisModal').classList.remove('hidden');
+      } catch (error) {
+        console.error('Error loading similarity analysis:', error);
+        alert('Failed to load similarity analysis.');
+      }
+    }
+
+    function closeSimilarityAnalysis() {
+      document.getElementById('similarityAnalysisModal').classList.add('hidden');
+    }
+
+    // --- Enhanced Student Projects Rendering ---
+    async function renderStudentProjects() {
+      if (!currentUser.email) return;
+
+      try {
+        const response = await fetch(`/api/projects/student?email=${currentUser.email}`);
+        const projects = await response.json();
+        const tbody = document.getElementById('studentProjectsTableBody');
+        tbody.innerHTML = '';
+
+        if (projects.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="py-4 px-5 text-center text-gray-500">No projects submitted yet.</td></tr>';
+          return;
+        }
+
+        projects.forEach(p => {
+          const domainClass = domainClassMap[p.domain] || 'bg-gray-100 text-gray-700';
+          const domainBadge = `<span class="inline-block px-3 py-1 rounded-md font-semibold text-xs ${domainClass}">${escapeHtml(niceDomain(p.domain))}</span>`;
+          const statusClass = statusClassMap[p.status] || '';
+          const statusBadge = `<span class="inline-block px-3 py-1 rounded-md font-semibold text-xs ${statusClass}">${capitalize(p.status)}</span>`;
+          const feedbackSection = p.status === 'rejected' && p.faculty_comment ?
+            `<div class="mt-1 text-xs italic text-red-600">Feedback: ${escapeHtml(p.faculty_comment)}</div>` : '';
+
+          let actionsButton = '';
+          if (p.status === 'rejected') {
+            actionsButton = `
+              <button class="text-blue-600 hover:text-blue-800 font-semibold text-sm flex items-center space-x-1" onclick="openViewProjectModal('${p.id}', true)">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 17v-4a4 4 0 014-4h12"></path>
+                </svg>
+                <span>Edit & Resubmit</span>
+              </button>
+              <button class="text-red-600 hover:text-red-800 font-semibold text-sm flex items-center space-x-1 ml-2" onclick="deleteProject('${p.id}')">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+                <span>Delete</span>
+              </button>
+            `;
+          } else {
+            actionsButton = `
+              <button class="text-gray-600 hover:text-gray-800 font-semibold text-sm flex items-center space-x-1" onclick="openViewProjectModal('${p.id}', false)">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                <span>View Details</span>
+              </button>
+              <button class="text-red-600 hover:text-red-800 font-semibold text-sm flex items-center space-x-1 ml-2" onclick="deleteProject('${p.id}')">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+                <span>Delete</span>
+              </button>
+            `;
+          }
+
+          const tr = document.createElement('tr');
+          tr.className = 'border-b border-gray-200 hover:bg-gray-50';
+          tr.innerHTML = `
+            <td class="py-4 px-5 align-top max-w-xs">
+              <div class="font-semibold text-gray-900">${escapeHtml(p.title)}</div>
+              <div class="text-gray-600 text-sm line-clamp-3">${escapeHtml(p.description || '')}</div>
+              ${feedbackSection}
+            </td>
+            <td class="py-4 px-5 align-top">${domainBadge}</td>
+            <td class="py-4 px-5 align-top">${statusBadge}</td>
+            <td class="py-4 px-5 align-top">
+              <div class="text-gray-900">${new Date(p.submittedOn).toLocaleDateString()}</div>
+              <div class="text-xs text-gray-500">${new Date(p.submittedOn).toLocaleTimeString()}</div>
+            </td>
+            <td class="py-4 px-5 align-top">${actionsButton}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        console.error('Error loading student projects:', err);
+        alert('Failed to load student projects.');
+      }
+    }
+
+    // --- Enhanced Faculty Projects Rendering ---
+    async function renderFacultyProjects() {
+      if (!currentUser.email) return;
+
+      const searchVal = (document.getElementById('facultySearchInput')?.value || '').toLowerCase().trim();
+      const statusFilter = (document.getElementById('facultyStatusFilter')?.value) || '';
+      const domainFilter = (document.getElementById('facultyDomainFilter')?.value) || '';
+      const similarityFilter = (document.getElementById('facultySimilarityFilter')?.value) || '';
+
+      let url = `/api/projects/faculty?email=${currentUser.email}`;
+      if (searchVal) url += `&search=${encodeURIComponent(searchVal)}`;
+      if (statusFilter) url += `&status=${encodeURIComponent(statusFilter)}`;
+      if (domainFilter) url += `&domain=${encodeURIComponent(domainFilter)}`;
+      if (similarityFilter) url += `&similarity=${encodeURIComponent(similarityFilter)}`;
+
+      try {
+        const response = await fetch(url);
+        const projects = await response.json();
+        const tbody = document.getElementById('facultyProjectsTableBody');
+        tbody.innerHTML = '';
+
+        if (projects.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" class="py-4 px-4 text-center text-gray-500">No projects to display.</td></tr>';
+          return;
+        }
+
+        projects.forEach(p => {
+          const tr = document.createElement('tr');
+          tr.className = 'border-b border-gray-200 hover:bg-gray-50';
+
+          const statusBadge = `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${statusClassMap[p.status]}">${capitalize(p.status)}</span>`;
+          const domainClass = domainClassMap[p.domain] || 'bg-gray-100 text-gray-700';
+          const domainBadge = `<span class="inline-block px-2 py-1 rounded-md text-xs font-semibold ${domainClass}">${escapeHtml(niceDomain(p.domain))}</span>`;
+
+          // Enhanced similarity analysis display
+          const similarityScore = p.similarity_percentage || 0;
+          const similarityFlag = p.similarity_flag || 'UNIQUE';
+          const flagInfo = similarityFlagMap[similarityFlag] || similarityFlagMap['UNIQUE'];
+          
+          let similarityDisplay = `
+            <div class="w-40">
+              <div class="flex items-center space-x-2 mb-1">
+                <div class="similarity-indicator flex-1">
+                  <div class="h-2 rounded-full ${getSimilarityColor(similarityScore)}" style="width: ${Math.min(similarityScore, 100)}%;"></div>
+                </div>
+                <span class="text-sm font-semibold ${flagInfo.color}">${similarityScore.toFixed(1)}%</span>
+              </div>
+              <div class="text-xs ${flagInfo.color}">${flagInfo.text}</div>
+          `;
+          
+          // Add similar projects info if available
+          if (p.similar_projects && p.similar_projects.length > 0) {
+            similarityDisplay += `
+              <div class="text-xs text-gray-500 mt-1">
+                Similar to ${p.similar_projects.length} project${p.similar_projects.length > 1 ? 's' : ''}
+              </div>
+            `;
+          }
+          similarityDisplay += '</div>';
+
+          // Action buttons with similarity context
+          let actionButtons = '';
+          if (p.status === 'pending') {
+            if (similarityScore >= 92) {
+              actionButtons = `
+                <button onclick="updateStatus('${p.id}','rejected')" class="bg-red-600 hover:bg-red-700 transition-colors text-white px-3 py-1 rounded-md text-sm font-semibold" title="Auto-reject due to high similarity">
+                  Auto-Reject
+                </button>
+                <button onclick="openRejectModal('${p.id}')" class="bg-orange-50 text-orange-600 border border-orange-100 hover:bg-orange-100 transition-colors px-3 py-1 rounded-md text-sm font-semibold ml-1">
+                  Review
+                </button>
+              `;
+            } else {
+              actionButtons = `
+                <button onclick="updateStatus('${p.id}','approved')" class="bg-green-600 hover:bg-green-700 transition-colors text-white px-3 py-1 rounded-md text-sm font-semibold">
+                  Approve
+                </button>
+                <button onclick="openRejectModal('${p.id}')" class="bg-red-50 text-red-600 border border-red-100 hover:bg-red-100 transition-colors px-3 py-1 rounded-md text-sm font-semibold ml-1">
+                  Reject
+                </button>
+              `;
+            }
+          }
+          
+          actionButtons += `
+            <button onclick="openViewProjectModal('${p.id}', false)" class="border border-gray-300 hover:bg-gray-100 text-gray-700 px-3 py-1 rounded-md text-sm font-semibold ml-1">
+              View Details
+            </button>
+          `;
+
+          // Format submittedOn as readable date and time
+          let submittedDate = '';
+          let submittedTime = '';
+          if (p.submittedOn) {
+            const d = new Date(p.submittedOn);
+            if (!isNaN(d.getTime())) {
+              submittedDate = d.toLocaleDateString();
+              submittedTime = d.toLocaleTimeString();
+            } else {
+              // fallback: show as is
+              submittedDate = escapeHtml(p.submittedOn);
+            }
+          }
+
+          tr.innerHTML = `
+            <td class="py-4 px-4 align-top">
+              <div class="flex flex-col">
+                <span class="flex items-center text-gray-900 font-semibold">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A15.935 15.935 0 0112 15.75c2.54 0 4.89.65 6.879 1.804M12 13a5 5 0 100-10 5 5 0 000 10z"/>
+                  </svg>
+                  ${escapeHtml(p.submittedByName || p.submittedBy)}
+                </span>
+                <span class="text-xs text-gray-500">${escapeHtml(p.submittedBy || '')}</span>
+              </div>
+            </td>
+            <td class="py-4 px-4 align-top">
+              <div class="font-semibold text-gray-900">${escapeHtml(p.title)}</div>
+              <div class="text-sm text-gray-600 line-clamp-3" title="${escapeHtml(p.description || '')}">${escapeHtml(p.description || '')}</div>
+              ${p.status === 'rejected' && p.faculty_comment ? `<div class="mt-1 text-xs text-red-600 italic">Feedback: ${escapeHtml(p.faculty_comment)}</div>` : ''}
+            </td>
+            <td class="py-4 px-4 align-top">${domainBadge}</td>
+            <td class="py-4 px-4 align-top">${similarityDisplay}</td>
+            <td class="py-4 px-4 align-top">${statusBadge}</td>
+            <td class="py-4 px-4 align-top">
+              <div class="text-gray-900">${submittedDate}</div>
+              <div class="text-xs text-gray-500">${submittedTime}</div>
+            </td>
+            <td class="py-4 px-4 align-top space-x-1">${actionButtons}</td>
+          `;
+
+          tbody.appendChild(tr);
+        });
+        
+        renderFacultyStats(); // Update stats
+      } catch (err) {
+        console.error('Error loading faculty projects:', err);
+        alert('Failed to load faculty projects.');
+      }
+    }
+
+    // --- Enhanced Faculty Stats ---
+    async function renderFacultyStats() {
+      if (!currentUser.email) return;
+
+      try {
+        const response = await fetch(`/api/faculty_stats?email=${currentUser.email}`);
+        const stats = await response.json();
+
+        document.getElementById('statTotalProjects').textContent = stats.total;
+        document.getElementById('statPendingProjects').textContent = stats.pending;
+        document.getElementById('statApprovedProjects').textContent = stats.approved;
+        document.getElementById('statRejectedProjects').textContent = stats.rejected;
+        document.getElementById('statDuplicates').textContent = stats.duplicates || 0;
+        document.getElementById('statAvgSimilarity').textContent = `${stats.avg_similarity || 0}%`;
+      } catch (error) {
+        console.error('Error fetching faculty stats:', error);
+        // Set fallback values
+        ['statTotalProjects', 'statPendingProjects', 'statApprovedProjects', 'statRejectedProjects', 'statDuplicates'].forEach(id => {
+          document.getElementById(id).textContent = 'N/A';
+        });
+        document.getElementById('statAvgSimilarity').textContent = 'N/A';
+      }
+    }
+
+    // --- Rest of the functions (unchanged but included for completeness) ---
+    async function deleteProject(projectId) {
+      if (!confirm("Are you sure you want to delete this project?")) {
+        return;
+      }
+      try {
+        const response = await fetch(`/api/projects/${projectId}`, {
+          method: 'DELETE',
+        });
+        const data = await response.json();
+        if (data.success) {
+          alert('Project deleted successfully.');
+          renderStudentProjects();
+        } else {
+          alert(data.message || 'Failed to delete project.');
+        }
+      } catch (error) {
+        console.error('Delete Project error:', error);
+        alert('An error occurred while deleting the project.');
+      }
+    }
+
+    // --- Modal Functions ---
+    let __currentRejectId = null;
+    async function openRejectModal(projectId) {
+      try {
+        const response = await fetch(`/api/projects/faculty?email=${currentUser.email}&id=${projectId}`);
+        const projects = await response.json();
+        const p = projects.find(proj => proj.id === projectId);
+
+        if (!p) { 
+          alert('Project not found or not assigned to you.'); 
+          return; 
+        }
+        
+        __currentRejectId = projectId;
+        document.getElementById('rejectModalTitle').textContent = p.title;
+        document.getElementById('rejectModalFeedback').value = p.faculty_comment || '';
+        document.getElementById('rejectModalFeedbackChk').checked = !!p.faculty_comment;
+        document.getElementById('rejectModal').classList.remove('hidden');
+        setTimeout(() => document.getElementById('rejectModalFeedback').focus(), 120);
+      } catch (error) {
+        console.error('Error opening reject modal:', error);
+        alert('Failed to load project details for rejection.');
+      }
+    }
+
+    function closeRejectModal() {
+      __currentRejectId = null;
+      document.getElementById('rejectModal').classList.add('hidden');
+      document.getElementById('rejectModalFeedback').value = '';
+    }
+
+    async function confirmReject() {
+      const feedbackEnabled = document.getElementById('rejectModalFeedbackChk').checked;
+      const feedback = feedbackEnabled ? document.getElementById('rejectModalFeedback').value.trim() : '';
+
+      if (!__currentRejectId) { 
+        closeRejectModal(); 
+        return; 
+      }
+
+      try {
+        const response = await fetch(`/api/projects/${__currentRejectId}/status`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            status: 'rejected',
+            faculty_comment: feedback || 'Rejected by faculty'
+          })
+        });
+        const data = await response.json();
+        if (data.success) {
+          alert('Project rejected successfully.');
+          closeRejectModal();
+          renderFacultyProjects();
+          renderStudentProjects();
+        } else {
+          alert(data.message || 'Failed to reject project.');
+        }
+      } catch (error) {
+        console.error('Confirm reject error:', error);
+        alert('Error rejecting project.');
+      }
+    }
+
+    async function updateStatus(projectId, newStatus) {
+      try {
+        const response = await fetch(`/api/projects/${projectId}/status`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            status: newStatus,
+            faculty_comment: (newStatus === 'approved' ? null : 'Status changed by faculty')
+          })
+        });
+        const data = await response.json();
+        if (data.success) {
+          alert(`Project ${newStatus} successfully.`);
+          renderFacultyProjects();
+          renderStudentProjects();
+        } else {
+          alert(data.message || `Failed to update project status to ${newStatus}.`);
+        }
+      } catch (error) {
+        console.error('Update status error:', error);
+        alert('Error updating project status.');
+      }
+    }
+
+    // --- View/Edit Project Modal ---
+    let __currentViewEditProjectId = null;
+    async function openViewProjectModal(projectId, allowEdit) {
+      try {
+        let projectUrl = '';
+        if (currentUser.role === 'student') {
+          projectUrl = `/api/projects/student?email=${currentUser.email}`;
+        } else if (currentUser.role === 'faculty') {
+          projectUrl = `/api/projects/faculty?email=${currentUser.email}`;
+        }
+        
+        const response = await fetch(projectUrl);
+        const allProjects = await response.json();
+        const p = allProjects.find(proj => proj.id === projectId);
+
+        if (!p) { 
+          alert('Project details not found.'); 
+          return; 
+        }
+        
+        __currentViewEditProjectId = projectId;
+
+        document.getElementById('viewModalHeader').textContent = allowEdit ? 'Edit Project' : 'Project Details';
+        document.getElementById('viewProjTitle').value = p.title;
+        document.getElementById('viewProjDomain').value = niceDomain(p.domain);
+        document.getElementById('viewProjFaculty').value = p.assignedFacultyName + ' (' + p.assignedFacultyEmail + ')';
+        document.getElementById('viewProjStudent').value = p.submittedByName + ' (' + p.submittedBy + ')';
+        document.getElementById('viewProjDescription').value = p.description;
+        document.getElementById('viewProjStatus').textContent = capitalize(p.status);
+
+        // Enhanced similarity display in modal (only if elements exist)
+        const similarityScore = p.similarity_percentage || 0;
+        const similarityFlag = p.similarity_flag || 'UNIQUE';
+        const flagInfo = similarityFlagMap[similarityFlag] || similarityFlagMap['UNIQUE'];
+        const simScoreEl = document.getElementById('viewProjSimilarityScore');
+        const simBarEl = document.getElementById('viewProjSimilarityBar');
+        const simFlagEl = document.getElementById('viewProjSimilarityFlag');
+        if (simScoreEl && simBarEl && simFlagEl) {
+          simScoreEl.textContent = `${similarityScore.toFixed(1)}%`;
+          simBarEl.className = `h-full rounded-full ${getSimilarityColor(similarityScore)}`;
+          simBarEl.style.width = `${Math.min(similarityScore, 100)}%`;
+          simFlagEl.textContent = flagInfo.text;
+          simFlagEl.className = `text-xs ${flagInfo.color} mt-1`;
+        }
+
+        if (p.faculty_comment) {
+          document.getElementById('viewProjFeedbackContainer').classList.remove('hidden');
+          document.getElementById('viewProjFeedback').textContent = p.faculty_comment;
+        } else {
+          document.getElementById('viewProjFeedbackContainer').classList.add('hidden');
+          document.getElementById('viewProjFeedback').textContent = '';
+        }
+
+        document.getElementById('viewProjTitle').readOnly = !allowEdit;
+        document.getElementById('viewProjDescription').readOnly = !allowEdit;
+        document.getElementById('viewProjectSaveBtn').classList.toggle('hidden', !allowEdit);
+
+        document.getElementById('viewProjectModal').classList.remove('hidden');
+      } catch (error) {
+        console.error('Error opening view/edit project modal:', error);
+        alert('Failed to load project details.');
+      }
+    }
+
+    function closeViewProjectModal() {
+      __currentViewEditProjectId = null;
+      document.getElementById('viewProjectModal').classList.add('hidden');
+    }
+
+    async function saveEditedProject() {
+      if (!__currentViewEditProjectId) { 
+        closeViewProjectModal(); 
+        return; 
+      }
+
+      const newTitle = document.getElementById('viewProjTitle').value.trim();
+      const newDescription = document.getElementById('viewProjDescription').value.trim();
+
+      if (!newTitle || !newDescription) {
+        alert("Title and description cannot be empty.");
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/projects/${__currentViewEditProjectId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: newTitle,
+            description: newDescription
+          })
+        });
+        const data = await response.json();
+        if (data.success) {
+          let message = 'Project updated and resubmitted successfully!';
+          if (data.similarity_percentage) {
+            message += ` New similarity score: ${data.similarity_percentage}%`;
+          }
+          alert(message);
+          closeViewProjectModal();
+          renderStudentProjects();
+        } else {
+          alert(data.message || 'Failed to update and resubmit project.');
+        }
+      } catch (error) {
+        console.error('Save edited project error:', error);
+        alert('Error updating and resubmitting project.');
+      }
+    }
+
+    // --- Helper Functions ---
+    function niceDomain(domain) {
+      if (!domain) return '';
+      return domain.replace(/_/g,' ').replace(/\b\w/g, l => l.toUpperCase());
+    }
+    
+    function capitalize(s) { 
+      return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; 
+    }
+    
+    function escapeHtml(text) {
+      if (text === null || text === undefined) return '';
+      return String(text).replace(/[&<>"'`=\/]/g, function (s) {
+        return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#x60;','=':'&#x3D;'})[s];
+      });
+    }
+
+    // --- Populate Faculty Dropdown ---
+    async function populateFacultyDropdown() {
+      const select = document.getElementById('projFaculty');
+      if (!select) return;
+      select.innerHTML = '<option value="">Select Faculty</option>';
+
+      try {
+        const response = await fetch('/api/faculty_list');
+        const facultyList = await response.json();
+        facultyList.forEach(f => {
+          const opt = document.createElement('option');
+          opt.value = f.email;
+          opt.textContent = `${f.name} (${f.email})`;
+          select.appendChild(opt);
+        });
+      } catch (error) {
+        console.error('Error fetching faculty list:', error);
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = 'Failed to load faculty';
+        opt.disabled = true;
+        select.appendChild(opt);
+      }
+    }
+
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', () => {
+      showLoginPage();
+    });
+  </script>
+</body>
+</html>
