@@ -1,0 +1,6 @@
+flask==3.0.3
+flask-cors==4.0.1
+sentence-transformers==3.2.1
+torch==2.5.1
+numpy==1.26.4
+sqlite-utils==3.36
